@@ -11,7 +11,9 @@
 {% for post in posts%}
     <div>
         <h1>{{post.title}}</h1>
-        <p>{{post.mini_text}}</p>
+        <h2>{{post.mini_text}}</h2>
+        <p>{{post.text}}</p>
+        <p>{{post.created_date}}</p>
     </div>
 {% endfor %}
 </body>
