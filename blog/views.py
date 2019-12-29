@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.generic.base import View
-from .models import Category
+from .models import Category,Post
 
 
 # Create your views here.
@@ -25,3 +25,11 @@ class CategoryView(View):
     def get(self, request, category_name):
         category = Category.objects.get(slug=category_name)
         return render(request, 'blog/post_list.html', {'category': category})
+
+
+class PostsView(View):
+    """Вывод постов"""
+
+    def get(self,request):
+        posts = Post.objects.all()
+        return render(request, 'blog/post_list.html', {'posts': posts})
