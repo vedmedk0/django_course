@@ -5,15 +5,6 @@ from .models import Category, Post
 from datetime import datetime
 
 
-# Create your views here.
-
-# def home(request):
-#     if request.method == "POST":
-#         return HttpResponse('Hi')
-#     elif request.method == "GET":
-#         return HttpResponse("good")
-
-
 class Homeview(View):
     def get(self, request):
         category_list = Category.objects.all()

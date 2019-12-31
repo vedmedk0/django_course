@@ -92,6 +92,9 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
+    def render_tags(self):
+        return ', '.join([tag.name for tag in self.tags.all()])
+
     class Meta:
         verbose_name = 'Пост'
         verbose_name_plural = 'Посты'
