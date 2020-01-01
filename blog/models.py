@@ -1,118 +1,149 @@
-from django.db import models
 from django.contrib.auth.models import User
-from mptt.models import MPTTModel
-from mptt.fields import TreeForeignKey
-from django.utils import timezone
+from django.db import models
 from django.urls import reverse
+from django.utils import timezone
+from mptt.fields import TreeForeignKey
+from mptt.models import MPTTModel
 
-
-# Create your models here.
 
 class Category(MPTTModel):
-    """Модель категории"""
-    name = models.CharField(verbose_name='Имя', max_length=100)
-    slug = models.SlugField(verbose_name='url', max_length=100)  # то что хранится по url
-    description = models.TextField('Описание', max_length=1000, default='', blank=True)
+    """Класс модели категорий сетей"""
+    name = models.CharField("Название", max_length=100)
+    slug = models.SlugField("url", max_length=100)
+    description = models.TextField("Описание", max_length=1000, default="", blank=True)
     parent = TreeForeignKey(
         'self',
-        verbose_name='Родительская категория',
+        verbose_name="Родительская категория",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name='children'
     )
-    template = models.CharField('Шаблон', max_length=500, default='blog/post_list.html')
-    published = models.BooleanField('Отображать', default=True)
-    paginated = models.PositiveIntegerField('Количество новостей на странце', default=5)
+    template = models.CharField("Шаблон", max_length=500, default="blog/post_list.html")
+    published = models.BooleanField("Отображать?", default=True)
+    paginated = models.PositiveIntegerField("Количество новостей на странице", default=5)
     sort = models.PositiveIntegerField('Порядок', default=0)
+
+    class Meta:
+        verbose_name = "Категория новостей"
+        verbose_name_plural = "Категории новостей"
+
+    # class MPTTMeta:
+    #     order_insertion_by = ('sort',)
+    #
+    # def get_absolute_url(self):
+    #     return reverse('news:list-news', kwargs={'slug': self.slug})
 
     def __str__(self):
         return self.name
-
-    class Meta:
-        verbose_name = 'Категория'
-        verbose_name_plural = "Категории"
 
 
 class Tag(models.Model):
-    """Модель тега"""
-    name = models.CharField(verbose_name="Название тега", max_length=100)
-    slug = models.SlugField(verbose_name='url', max_length=100)  # то что хранится по url
+    """Класс модели тегов"""
+    name = models.CharField("Тег", max_length=50, unique=True)
+    slug = models.SlugField("url", max_length=100, unique=True)
+    published = models.BooleanField("Отображать?", default=True)
+
+    class Meta:
+        verbose_name = "Тег"
+        verbose_name_plural = "Теги"
+
+    # def get_absolute_url(self):
+    #     return reverse('news:tag-news', kwargs={'tag': self.slug})
 
     def __str__(self):
         return self.name
 
-    class Meta:
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
-
 
 class Post(models.Model):
-    """Модель поста"""
-    title = models.CharField(verbose_name="Заголовок", max_length=100)
-    subtitle = models.CharField(verbose_name="Подзаголовок", max_length=100, blank=True, null=True)
-    mini_text = models.TextField(verbose_name="Краткое содержание", max_length=300)
-    text = models.TextField(verbose_name="Текст")
-    created_date = models.DateTimeField(verbose_name="Дата создания")
-    slug = models.SlugField(verbose_name='url', max_length=100)
-    category = models.ForeignKey(Category,
-                                 verbose_name="Категория",
-                                 on_delete=models.CASCADE,
-                                 null=True)
-    tags = models.ManyToManyField(Tag, verbose_name='Тег', blank=True)
+    """Класс модели поста"""
     author = models.ForeignKey(
         User,
-        verbose_name='Автор',
+        verbose_name="Автор",
         on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
+    title = models.CharField("Заголовок", max_length=500)
+    slug = models.SlugField("url", max_length=100, unique=True)
+    subtitle = models.CharField("Под заголовок", max_length=500, blank=True, null=True)
+    mini_text = models.TextField("Краткое содержание", max_length=5000)
+    text = models.TextField("Полное содержание", max_length=10000000)
+    created_date = models.DateTimeField("Дата создания", auto_now_add=True)
     edit_date = models.DateTimeField(
-        'Дата редактирования',
+        "Дата редактирования",
         default=timezone.now,
         blank=True,
         null=True
     )
     published_date = models.DateTimeField(
-        'Дата публикации',
+        "Дата публикации",
         default=timezone.now,
         blank=True,
         null=True
     )
-    image = models.ImageField('Главная фотография', upload_to='post/', null=True, blank=True)
-    template = models.CharField('Шаблон', max_length=500, default='blog/post_details.html')
-    viewed = models.PositiveIntegerField('Просмотрено', default=0)
-    status = models.BooleanField('Для зарегистрированных', default=False)
-    sort = models.PositiveIntegerField('Порядок', default=0)
-    published = models.BooleanField('Отображать', default=True)
+    image = models.ImageField("Главная фотография", upload_to="post/", null=True, blank=True)
+    tags = models.ManyToManyField(Tag, verbose_name="Тег", blank=True, related_name="tag")
+    category = models.ForeignKey(
+        Category,
+        verbose_name="Категория",
+        on_delete=models.CASCADE,
+        null=True
+    )
+    template = models.CharField("Шаблон", max_length=500, default="blog/post_detail.html")
 
+    published = models.BooleanField("Опубликовать?", default=True)
+    viewed = models.PositiveIntegerField("Просмотрено", default=0)
+    status = models.BooleanField("Для зарегистрированных", default=False)
+    sort = models.PositiveIntegerField('Порядок', default=0)
+
+    class Meta:
+        verbose_name = "Новость"
+        verbose_name_plural = "Новости"
+        # ordering = ["sort", "-published_date"]
+
+    # def get_category_slug(self):
+    #     return self.category.slug
+    #
+    # def get_category_template(self):
+    #     return self.category.template
+    #
+    # def get_category_paginated(self):
+    #     return self.category.paginated
+    #
     def get_absolute_url(self):
         return reverse('detail_post', kwargs={'category': self.category.slug, 'slug': self.slug})
 
+    def get_tags(self):
+        return self.tags.all()
+
+    def get_comments_count(self):
+        return self.comments.count()
+
     def __str__(self):
-        return self.title
-
-    def render_tags(self):
-        return ', '.join([tag.name for tag in self.tags.all()])
-
-    class Meta:
-        verbose_name = 'Пост'
-        verbose_name_plural = 'Посты'
+        return "{}".format(self.title)
 
 
 class Comment(models.Model):
-    """Модель комментария"""
-    author = models.ForeignKey(User,
-                               verbose_name="Автор",
-                               on_delete=models.CASCADE)
-    text = models.TextField(verbose_name="Текст")
-    creation_date = models.DateTimeField(verbose_name="Дата создания")
-    moderation = models.BooleanField(verbose_name="Модерация")
-    post = models.ForeignKey(Post, verbose_name='Статья', on_delete=models.CASCADE)
+    """Модель комментария поста"""
+    author = models.ForeignKey(
+        User,
+        verbose_name="Автор",
+        on_delete=models.CASCADE
+    )
+    post = models.ForeignKey(
+        Post,
+        verbose_name="Статья",
+        on_delete=models.CASCADE,
+        related_name="comments"
+    )
+    text = models.TextField("Комментарий")
+    create_date = models.DateTimeField("Дата создания", auto_now=True)
+    moderation = models.BooleanField(default=True)
 
-    def __str__(self):
-        return self.text
+    # def __str__(self):
+    #     return
 
     class Meta:
-        verbose_name = 'Комментарий'
+        verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"
